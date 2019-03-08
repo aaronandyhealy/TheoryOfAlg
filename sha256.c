@@ -34,4 +34,21 @@ void sha256{
         0x5be0cd19
     };
 
+    //Current Msg Block
+    uint32_t M[16];
+
+    // For Loop
+    int t;
+
+    //Page 22, W[t] = M[t] for 0 <= t <= 15
+    for (t = 0; t < 16; t++){
+        //Set First 16 
+        W[t] = M[t];
+    }
+
+    //Page 22, W[t] ...
+    for (t = 16; t < 64; t++){
+        //Set Next 48
+        
+    }
 }
