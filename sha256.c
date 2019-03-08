@@ -57,7 +57,7 @@ void sha256{
     //Page 22, W[t] ...
     for (t = 16; t < 64; t++){
         //Set Next 48
-        sig_1(W[t-2]) + W[t-7] + sig_0(W[T-15]) + w[t-16];
+        sig1(W[t-2]) + W[t-7] + sig0(W[T-15]) + w[t-16];
     }
 }
 
