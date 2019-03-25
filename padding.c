@@ -10,11 +10,18 @@ union msgblock {
 };
 
 int main(int argc, char *argv[]){
-    FILE* f;
+    union msgblock M;
 
+    uint64_t nobytes;
+
+    FILE* f;
     f = fopen (argv[1], "r");
 
-    printf ("c\n"), fread(&c, 1, 1, f));
+    //loop until file end
+    while(!feof (f)){
+        nobytes = fread(M,.e, 1, 64, f);
+        printf("%llu\n", nobytes);
+    }
     fclose(f);
 
     return 0;
