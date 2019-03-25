@@ -12,15 +12,18 @@ void sha256();
 uint32_t sig0(uint32_t x);
 uint32_t sig1(uint32_t x);
 
+
+uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
+uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
+
 //See Section 3.2 for defs
 uint32_t rotr(uint32_t n, uint32_t x);
 uint32_t shr(uint32_t n, uint32_t x)
 
 int main(int argc, char *argv[]){
     sha256();
-
-    return 0;
-}
+    print("Hello")
+} //end main
 
 void sha256{
 
@@ -59,6 +62,34 @@ void sha256{
         //Set Next 48
         sig1(W[t-2]) + W[t-7] + sig0(W[T-15]) + w[t-16];
     }
+
+    //initialise as per step 2 page 22
+    a = H[0]; b = H[1]; c = H[2]; d = H[3]; e = H[4];
+    f = H[5]; g = H[6]; h = H[7];
+
+    //Step 3    
+    for (t = 0; t < 64; t++){
+        T1 = h + SIG_1(c) + Ch(e, f, g) + K[t] + W[t];
+        T2 = SIG_0(a) + Maj(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + T1;
+        d = c;
+        c = b;
+        b = a;
+        a = T1 + T2;
+    }
+
+    //Step 4
+    H[0] = a + H[0];
+    H[1] = a + H[1];
+    H[2] = a + H[2];
+    H[3] = a + H[3];
+    H[4] = a + H[4];
+    H[5] = a + H[5];
+    H[6] = a + H[6];
+    H[7] = a + H[7];
 }
 
 //Section 3.2 for Defs
