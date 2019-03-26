@@ -35,7 +35,6 @@ int main(int argc, char *argv[]){
             M.s[7] = nobits;
         }
     }
-
     fclose(file);
 
     for(int i = 0; i < 64; i++){
