@@ -2,7 +2,6 @@
 //Secure Hash Algorithim, 256 bit version
 // https://ws680.nist.gov/publication/get_pdf.cfm?pub_id=910977
 
-
 //The usual input/output header file
 #include <stdio.h>
 //for using fixed bit length ints
@@ -38,11 +37,20 @@ void sha256(FILE *f);
 // Retrieves the next message block.
 int nextmessageblock(FILE *f, union msgblock *M, enum status *S, uint64_t *nobits);
 
-int main(int argc, char *argv[]){
+int main(){
     
-//Open the file given as first command line argument
-  FILE* msgf;
-  msgf = fopen(argv[1], "r");
+// Open the file given as first command line argument
+  FILE *msgf;
+char fnamer[100]="";		//Storing File Path/Name of Image to Display
+printf("\n\nPlease Enter the Full Path of the Image file you want to view: \n");
+scanf("%s",&fnamer);
+msgf=fopen(fnamer,"r");
+        if(msgf==NULL)
+	{
+		printf("\n%s\" File NOT FOUND!",fnamer);
+		getch();
+		exit(1);
+	}
   
   // Run the secure has algorithem on the file
   sha256(msgf);
@@ -51,7 +59,7 @@ int main(int argc, char *argv[]){
   fclose(msgf);
   
   return 0;
-}//end main
+}
 
 void sha256(FILE *msgf){
 
