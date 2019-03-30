@@ -42,7 +42,9 @@ int main(){
 // Open the file given as first command line argument
   FILE *msgf;
 char fnamer[100]="";		//Storing File Path/Name of Image to Display
-printf("\n\nPlease Enter the Full Path of the Image file you want to view: \n");
+
+printf("\n\nWelcome to My sha256 Program: \n");
+printf("\nPlease Enter the Full Path of the file you want use: \n");
 scanf("%s",&fnamer);
 msgf=fopen(fnamer,"r");
         if(msgf==NULL)
