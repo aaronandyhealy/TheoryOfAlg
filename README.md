@@ -27,7 +27,9 @@ Research was completed alongside these videos to learn more about the SHA256 alg
 While the sha256 hashing seemed to work at first, after testing it out against two online sha256 hashing converters. Below is an example of when I ran my program on a file compared to the two online converters on the same file.
 
 <img src="/myTest.PNG" alt="My Result"/>
+_______________________________________________________________________________________________________________
 <img src="online1.PNG" alt="Online 1"/>
+_______________________________________________________________________________________________________________
 <img src="/online2.PNG" alt="Online 2"/>
 
 As you can see the online tests are the same, therefore it is clear my program is not getting the correct hash value.
