@@ -23,6 +23,15 @@ This project was completed using the guidance of video lectures created by our l
 
 Research was completed alongside these videos to learn more about the SHA256 algorithm and its standards.
 
+# Problems
+While the sha256 hashing seemed to work at first, after testing it out against two online sha256 hashing converters. Below is an example of when I ran my program on a file compared to the two online converters on the same file.
+
+<img src="/myTest.png" alt="My Result"/>
+<img src="/online1.png" alt="Online 1"/>
+<img src="/online2.png" alt="Online 2"/>
+
+As you can see the online tests are the same, therefore it is clear my program is not getting the correct hash value.
+
 # Videos & Research
 * [Video - Part 1](https://web.microsoftstream.com/video/db7c03be-5902-4575-9629-34d176ff1366)
 * [Video - Part 2](https://web.microsoftstream.com/video/2a86a2ac-aafb-46e0-a278-a3faa1d13cbf)
