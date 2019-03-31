@@ -13,7 +13,7 @@ Follow these steps to then run the script.
 
 1. Clone this repo using 'git clone https://github.com/aaronandyhealy/TheoryOfAlg'
 2. Go into the cloned dircetory and run the following commands:
-3. Compile - 'gcc sha256.c' and 'gcc padding.c'
+3. Compile - 'gcc sha256.c'
 4. Execute - 'sha256.exe'
 5. Enter a file when asked
 
