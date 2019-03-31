@@ -6,74 +6,83 @@
 #include <stdio.h>
 //for using fixed bit length ints
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Represents a message block
 union msgblock {
     uint8_t e[64];
-    uint32_t t[16];
+    uint32_t t[32];
     uint64_t s[8];
 };
+// Calculates the SHA256 hash of a file
+uint64_t * sha256(FILE *f);
 
 // A flag for where we are in reading the file
 enum status {READ, PAD0, PAD1, FINISH};
 
-//Definition on section 4.1.2
-uint32_t sig0(uint32_t x);
-uint32_t sig1(uint32_t x);
+#define SWAP_UINT32(x) (((x) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | ((x) << 24))
+#define uchar unsigned char
+#define uint unsigned int
+#define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
+#define SWAP_UINT64(x) \
+        ( (((x) >> 56) & 0x00000000000000FF) | (((x) >> 40) & 0x000000000000FF00) | \
+          (((x) >> 24) & 0x0000000000FF0000) | (((x) >>  8) & 0x00000000FF000000) | \
+          (((x) <<  8) & 0x000000FF00000000) | (((x) << 24) & 0x0000FF0000000000) | \
+          (((x) << 40) & 0x00FF000000000000) | (((x) << 56) & 0xFF00000000000000) )
 
-uint32_t SIG0(uint32_t x);
-uint32_t SIG1(uint32_t x);
+#define ROTRIGHT(a,b) (((a) >> (b)) | ((a) << (32-(b))))
+#define Ch(x,y,z) (((x) & (y)) ^ (~(x) & (z)))
+#define Maj(x,y,z) (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+#define SIG0(x) (ROTRIGHT(x,2) ^ ROTRIGHT(x,13) ^ ROTRIGHT(x,22))
+#define SIG1(x) (ROTRIGHT(x,6) ^ ROTRIGHT(x,11) ^ ROTRIGHT(x,25))
+#define sig0(x) (ROTRIGHT(x,7) ^ ROTRIGHT(x,18) ^ ((x) >> 3))
+#define sig1(x) (ROTRIGHT(x,17) ^ ROTRIGHT(x,19) ^ ((x) >> 10))
+#define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
 
-uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
-uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
-
-///Definition on section 3.2
-uint32_t rotr(uint32_t n, uint32_t x);
-uint32_t shr(uint32_t n, uint32_t x);
-
-// Calculates the SHA256 hash of a file
-void sha256(FILE *f);
 
 // Retrieves the next message block.
 int nextmessageblock(FILE *f, union msgblock *M, enum status *S, uint64_t *nobits);
-
 int main(){
     
-// Open the file given as first command line argument
+  // Open the file given as first command line argument
   FILE *msgf;
-char fnamer[100]="";		//Storing File Path/Name of Image to Display
-
-printf("\n\nWelcome to My sha256 Program: \n");
-printf("\nPlease Enter the Full Path of the file you want use: \n");
-scanf("%s",&fnamer);
-msgf=fopen(fnamer,"r");
-        if(msgf==NULL)
-	{
-		printf("\n%s\" File NOT FOUND!",fnamer);
-		getch();
-		exit(1);
-	}
+  char fnamer[100]="";		//Storing File Path/Name of Image to Display
+  uint64_t  *h;
+  printf("\n\nWelcome to My sha256 Program: \n");
+  printf("\nPlease Enter the Full Path of the file you want use: \n");
+  scanf("%s",&fnamer);
+  msgf=fopen(fnamer,"r");
   
-  // Run the secure has algorithem on the file
-  sha256(msgf);
-
-  // Close the file
+  if(msgf==NULL)
+    {
+      printf("\n%s\" File NOT FOUND!",fnamer);
+      getch();
+      exit(1);
+    }
+              
+  //pass the file to sha256
+  h = sha256(msgf);
+  for(int i =0; i < 8; i++){
+      printf("%08llx", *(h+i));
+  }
+  
   fclose(msgf);
-  
   return 0;
 }
 
-void sha256(FILE *msgf){
 
-  // Curr message block
-  union msgblock M;
+//Sha256
+uint64_t * sha256(FILE *msgFile){
 
-  // No of bits read from the file
-  uint64_t nobits = 0;
+    uint32_t W[64];
+    //the current messageBlock
+    union msgblock M;
 
-  // Status of the message blocks
-  enum status S = READ;
- 
+    //the number of bits read from thr gilr
+    uint64_t noBits = 0;
+
+    
   //The K constants
   uint32_t K[] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
@@ -94,61 +103,74 @@ void sha256(FILE *msgf){
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
   };
  
-  //Message Sched 6.2
-  uint32_t W[64];
-  //Working Vars 6.2
-  uint32_t a, b, c, d, e, f, g, h;
-  //Two Temp Vars 6.2
-  uint32_t T1, T2;
-
-  //The Hash Val 6.2
-  //The Values come from 5.3.3.
-  uint32_t H[8] = {
-    0x6a09e667,
-    0xbb67ae85,
-    0x3c6ef372,
-    0xa54ff53a,
-    0x510e527f,
-    0x9b05688c,
-    0x1f83d9ab,
-    0x5be0cd19
-  };
-
-  
-  //For looping.
-  int i, t;
-  
-  //Loop through message blocks as per page 22. 
-  while (nextmessageblock(msgf, &M, &S, &nobits)){
-
-    //From page 22, W[t] = M[t] for 0 <= t <=15.
-    for (t = 0; t < 16; t++)
-      W[t] = M.t[t];
     
-    //From page 22, W[t] = ...
-    for(t = 16; t < 64; t++)
-      W[t] = sig1(W[t-2]) + W[t-7] + sig0(W[t-15] + W[t-16]);
+    //status of message block
+    enum status s = READ;
 
-    //Initialise a, b, c, .., h as per Step 2, Page 22.
-    a = H[0]; b = H[1]; c = H[2]; d = H[3];
-    e = H[4]; f = H[5]; g = H[6]; h = H[7];
+    uint32_t a,b,c,d,e,f,g,h;
 
-    //Step 3.
-    //Creating new values for working variables.
-    for(t = 0; t < 64; t++) {
-      T1 = h + SIG1(e) + Ch(e, f, g) + K[t] + W[t];
-      T2 = SIG0(a) + Maj(a, b, c);
-      h = g;
-      g = f;
-      f = e;
-      e = d + T1;
-      d = c;
-      c = b;
-      b = a;
-      a = T1 + T2;
+    uint32_t T1, T2;
+
+    //initial valuies for H
+    uint32_t H[8] = {
+        0x6a09e667,
+        0xbb67ae85,
+        0x3c6ef372,
+        0xa54ff53a,
+        0x510e527f,
+        0x9b05688c,
+        0x1f83d9ab,
+        0x5be0cd19,
+
+    };
+
+    uint64_t *list = malloc(sizeof(uint64_t[8]));
+
+    //for loop to iterate through array
+    int t, i;
+    //check the next message
+    while(nextmessageblock(msgFile, &M, &s, &noBits)){
+
+        for(t = 0; t < 16; t++){
+
+            //converting from little endian to big endian
+            if(IS_BIG_ENDIAN){
+                W[t] = M.t[t];
+            }
+            else{
+                W[t] = SWAP_UINT32(M.t[t]) ;
+            }
+        }
+
+        for(t = 16; t < 64; t++)
+            W[t] = sig1(W[t - 2]) + W[t - 7] + sig0(W[t - 15]) + W[t - 16];
+
     }
 
-    //Step 4.
+    a = H[0];
+    b = H[1];
+    c = H[2];
+    d = H[3];
+    e = H[4];
+    f = H[5];
+    g = H[6];
+    h = H[7];
+
+    
+    for(t = 0; t < 64; t++)
+    {
+        T1 = h + SIG1(e) + Ch(e, f, g) + K[t] + W[t];
+        T2 = SIG0(a) + Maj(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + T1;
+        d = c;
+        c = b;
+        b = a;
+        a = T1 + T2;
+    }
+
     H[0] = a + H[0];
     H[1] = b + H[1];
     H[2] = c + H[2];
@@ -158,10 +180,12 @@ void sha256(FILE *msgf){
     H[6] = g + H[6];
     H[7] = h + H[7];
 
+
+    for(t = 0; t < 8; t++){
+        list[t] = H[t];
     }
 
-    printf("%08x %08x %08x %08x %08x %08x %08x %08x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
-
+    return list;
 }
 
 int nextmessageblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits){
@@ -184,7 +208,8 @@ int nextmessageblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *no
             M->e[i] = 0x00;
         }
         // Set the last 64 bits to the number of bits in the file (should be big endian)
-        M->s[7] = *nobits;
+        //M->s[7] = *nobits;
+        M->s[7] = SWAP_UINT64(*nobits);
         // Tell S we are finished
         *S = FINISH;
 
@@ -210,7 +235,8 @@ int nextmessageblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *no
             M->e[nobytes] = 0x00;
         }
         // Append the file size in bits as a (should be big endian) unsigned 65 bit int.
-        M->s[7] = *nobits;
+       // M->s[7] = *nobits;
+        M->s[7] = SWAP_UINT64(*nobits);
         *S = FINISH;
     // Otherwise check if we can put some padding into this message block
     } else if (nobytes < 64){
@@ -227,44 +253,6 @@ int nextmessageblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *no
         // Tell S that we need another message block with all the padding
         *S = PAD1;
       }
-    
-    
-    // If we get this far, then return 1 so that the function is called again
     return 1;
-
 }
 
-//See Section 3.2 for definitions.
-uint32_t rotr(uint32_t n, uint32_t x){
-  return (x >> n) | (x << (32 - n));
-}
-
-uint32_t shr(uint32_t n, uint32_t x){
-  return (x >> n);
-}
-
-uint32_t sig0(uint32_t x){
-  //See Sections 3.2 and 4.1.2 for definitions.
-  return (rotr(7, x) ^ rotr(18, x) ^ shr(3, x));
-} 
-  
-uint32_t sig1(uint32_t x){
-  //See Sections 3.2 and 4.1.2 for definitions.
-  return (rotr(17, x) ^ rotr(19, x) ^ shr(10, x));
-}
-
-uint32_t SIG0(uint32_t x){
-  return (rotr(2, x) ^ rotr(13, x) ^ rotr(22, x));
-}
-
-uint32_t SIG1(uint32_t x){
-  return (rotr(6, x) ^ rotr(11, x) ^ rotr(25, x));
-}
-
-uint32_t Ch(uint32_t x, uint32_t y, uint32_t z){
-  return ((x & y) ^ ((!x) & z));
-}
-
-uint32_t Maj(uint32_t x, uint32_t y, uint32_t z){
-  return ((x & y) ^ (x & z) ^ (y & z));
-}
