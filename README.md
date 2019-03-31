@@ -36,6 +36,11 @@ ________________________________________________________________________________
 
 As you can see the online tests are the same, therefore it is clear my program is not getting the correct hash value.
 
+# Fixes
+After I ran into the above problem I contacted fellow classmates who also seemed to be getting the same problem. We worked together to see could we find a solution. After a bit of tweaking I was able to get the program to display the correct hash value. Below shows my test is now displaying the same hash value as the above online tests.
+
+<img src="/myTestCorrect.PNG" alt="Test Correct"/> 
+
 # Videos & Research
 * [Video - Part 1](https://web.microsoftstream.com/video/db7c03be-5902-4575-9629-34d176ff1366)
 * [Video - Part 2](https://web.microsoftstream.com/video/2a86a2ac-aafb-46e0-a278-a3faa1d13cbf)
